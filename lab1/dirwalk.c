@@ -57,22 +57,25 @@ Item *sort_files(Item *files) {
 
 Item *read_files(char *dir_name) {
     DIR *dir = opendir(dir_name);
+
     if (!dir) {
         perror("opendir");
         return NULL;
     }
-
     struct dirent *dir_item;
     Item *files = NULL;
 
     while ((dir_item = readdir(dir)) != NULL) {
-        if (strcmp(dir_item->d_name, ".") == 0 || strcmp(dir_item->d_name, "..") == 0)
-            continue;
 
+        if (strcmp(dir_item->d_name, ".") == 0 ||
+            strcmp(dir_item->d_name, "..") == 0)
+            continue;
         files = realloc(files, (size_of_list + 1) * sizeof(Item));
+
         if (!files) {
             fprintf(stderr, "realloc failed\n");
             closedir(dir);
+            free(files); 
             return NULL;
         }
         files[size_of_list++] = make_item(dir_item);
@@ -80,11 +83,12 @@ Item *read_files(char *dir_name) {
 
     if (closedir(dir) != 0) {
         perror("closedir");
+        free(files);
         return NULL;
     }
-
     return files;
 }
+
 
 void read_options(int argc, char **argv) {
     for (int i = 1; i < argc; i++) {
